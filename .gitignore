@@ -1,0 +1,40 @@
+# Build output
+/bin/
+/dist/
+*.exe
+*.exe~
+*.dll
+*.so
+*.dylib
+
+# Test output
+*.test
+*.out
+coverage.*
+*.coverprofile
+profile.cov
+
+# Go workspace files (local only)
+go.work
+go.work.sum
+
+# hopscope runtime data (local databases, reports)
+*.db
+*.db-journal
+*.db-wal
+*.db-shm
+/reports/
+
+# Environment and secrets
+.env
+.env.*
+
+# Editors and OS
+.idea/
+.vscode/
+*.swp
+.DS_Store
+Thumbs.db
+
+# Claude Code per-user settings
+.claude/settings.local.json

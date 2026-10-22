@@ -1,0 +1,44 @@
+# golangci-lint v2 configuration. https://golangci-lint.run/usage/configuration/
+version: "2"
+
+run:
+  # Integration tests live behind this build tag; lint them too.
+  build-tags:
+    - integration
+
+linters:
+  # "standard" = errcheck, govet, ineffassign, staticcheck, unused.
+  default: standard
+  enable:
+    - bodyclose      # unclosed HTTP response bodies (Phase 4 HTTP timing)
+    - errorlint      # use errors.Is/As and %w; wrapped errors must stay inspectable
+    - gocritic       # broad bug and style checks
+    - gosec          # security: file permissions, weak crypto, unchecked conversions
+    - misspell
+    - noctx          # network calls must take a context.Context (timeouts and cancel)
+    - nolintlint     # every //nolint must name a linter and give a reason
+    - revive         # doc comments on exported identifiers, naming
+    - unconvert
+    - usestdlibvars
+  settings:
+    nolintlint:
+      require-explanation: true
+      require-specific: true
+    misspell:
+      locale: US
+  exclusions:
+    rules:
+      # Tests may use fixed file permissions, weak randomness, etc.
+      - path: _test\.go
+        linters:
+          - gosec
+
+formatters:
+  enable:
+    - gofmt
+    - goimports
+  settings:
+    goimports:
+      # Group this module's imports separately from third-party ones.
+      local-prefixes:
+        - github.com/dasosis/hopscope

@@ -1,0 +1,66 @@
+name: CI
+
+on:
+  push:
+  pull_request:
+
+# Least privilege: the workflow only needs to read the repository.
+permissions:
+  contents: read
+
+# A new push to the same branch cancels the run that is still in progress.
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  lint:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+      - uses: actions/setup-go@v7
+        with:
+          go-version: stable
+      - name: Check go.mod and go.sum are tidy
+        run: go mod tidy -diff
+      - uses: golangci/golangci-lint-action@v9
+        with:
+          version: v2.15
+
+  test:
+    name: test (${{ matrix.os }}, go ${{ matrix.go }})
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest, windows-latest, macos-latest]
+        go: [stable]
+        include:
+          # The minimum version in go.mod is the previous release, so test it too.
+          - os: ubuntu-latest
+            go: oldstable
+    runs-on: ${{ matrix.os }}
+    steps:
+      - uses: actions/checkout@v7
+      - uses: actions/setup-go@v7
+        with:
+          go-version: ${{ matrix.go }}
+      - name: Vet
+        run: go vet ./...
+      # The race detector needs cgo; skip it on Windows to avoid depending on
+      # the runner's C toolchain.
+      - name: Test
+        run: go test -count=1 ${{ runner.os != 'Windows' && '-race' || '' }} ./...
+
+  cross-compile:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          fetch-depth: 0 # full history so `git describe` can find tags
+      - uses: actions/setup-go@v7
+        with:
+          go-version: stable
+      - name: Cross-compile for all platforms
+        run: make cross
+      - name: Smoke-test the Linux binary
+        run: ./dist/hopscope-linux-amd64 version
